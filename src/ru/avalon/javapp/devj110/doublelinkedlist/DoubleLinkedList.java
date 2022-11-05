@@ -10,7 +10,6 @@ public class DoubleLinkedList {
             ListEx nh = new ListEx(value);
             nh.next = head;
             head.previous = nh;
-            nh.previous = null;
             head = nh;
         } else {
             head = tail = new ListEx(value);
@@ -107,14 +106,18 @@ public class DoubleLinkedList {
         if (list.head == null)
             return false;
 
-        ListEx it = list.head;
-        while (it != null) {
-            addToHead(it.value);
-            it = it.next;
+        if(head != null) {
+            list.tail.next = head;
+            head.previous = list.tail;
+            head = list.head;
+            list.head = list.tail = null;
+            return true;
+        } else {
+            head = list.head;
+            tail = list.tail;
+            list.head = list.tail = null;
+            return true;
         }
-
-        list.head = list.tail = null;
-        return true;
     }
 
     //поглощение списка другим списком с добавлением значений второго в конец
@@ -122,14 +125,18 @@ public class DoubleLinkedList {
         if (list.head == null)
             return false;
 
-        ListEx it = list.head;
-        while (it != null) {
-            addToTail(it.value);
-            it = it.next;
+        if(head != null) {
+            list.head.previous = tail;
+            tail.next = list.head;
+            tail = list.tail;
+            list.head = list.tail = null;
+            return true;
+        } else {
+            head = list.head;
+            tail = list.tail;
+            list.head = list.tail = null;
+            return true;
         }
-
-        list.head = list.tail = null;
-        return true;
     }
 
     //печать всех значений списка в прямом порядке
