@@ -113,9 +113,7 @@ public class DoubleLinkedList {
             list.head = list.tail = null;
             return true;
         } else {
-            head = list.head;
-            tail = list.tail;
-            list.head = list.tail = null;
+            releasingList(list);
             return true;
         }
     }
@@ -132,11 +130,14 @@ public class DoubleLinkedList {
             list.head = list.tail = null;
             return true;
         } else {
-            head = list.head;
-            tail = list.tail;
-            list.head = list.tail = null;
+            releasingList(list);
             return true;
         }
+    }
+    private void releasingList (DoubleLinkedList list) {
+        head = list.head;
+        tail = list.tail;
+        list.head = list.tail = null;
     }
 
     //печать всех значений списка в прямом порядке
