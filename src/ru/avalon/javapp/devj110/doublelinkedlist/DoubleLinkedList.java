@@ -1,39 +1,52 @@
 package ru.avalon.javapp.devj110.doublelinkedlist;
 
-public class DoubleLinkedList {
-    private ListEx head;
-    private ListEx tail;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
+public class DoubleLinkedList<T> implements Iterable<T>, Cloneable{
+    private ListEx<T> head;
+    private ListEx<T> tail;
+
+    public DoubleLinkedList() {
+    }
+
+    public DoubleLinkedList(ListEx<T> head, ListEx<T> tail) {
+        this.head = head;
+        this.tail = tail;
+    }
 
     //    добавление значения в начало списка;
-    public void addToHead(Object value) {
+    public void addToHead(T value) {
         if( head != null) {
-            ListEx nh = new ListEx(value);
+            ListEx<T> nh = new ListEx<>(value);
             nh.next = head;
             head.previous = nh;
             head = nh;
         } else {
-            head = tail = new ListEx(value);
+            head = tail = new ListEx<>(value);
         }
     }
 
     // добавление всех значений заданного массива в начало списка с сохранением порядка
-    public void addAllToHead(Object[] values) {
+    public void addAllToHead(T[] values) {
         for (int i = values.length - 1; i >= 0 ; i--) {
             addToHead(values[i]);
         }
     }
 
     //извлечение значения из начала списка без его удаления из списка;
-    public Object peekFromHead() {
+    public T peekFromHead() {
         return head != null ? head.value : null;
     }
 
     //    извлечение значения из начала списка с удалением из списка;
-    public Object peekAndRemoveFromHead() {
+    public T peekAndRemoveFromHead() {
         if(head == null)
             return null;
 
-        Object res = head.value;
+        T res = head.value;
 
         if(head != tail) {
             head = head.next;
@@ -45,35 +58,35 @@ public class DoubleLinkedList {
     }
 
     //добавление значения в конец списка;
-    public void addToTail(Object value) {
+    public void addToTail(T value) {
         if(tail != null) {
-            ListEx nt = new ListEx(value);
+            ListEx<T> nt = new ListEx<>(value);
             tail.next = nt;
             nt.previous = tail;
             tail = tail.next;
         } else {
-            head = tail = new ListEx(value);
+            head = tail = new ListEx<>(value);
         }
     }
 
     //добавление всех значений заданного массива в конец списка с сохранением порядка
-    public void addAllToTail(Object[] values) {
+    public void addAllToTail(T[] values) {
         for (int i = 0; i < values.length; i++) {
             addToTail(values[i]);
         }
     }
 
     // извлечение значения из конца списка без его удаления;
-    public Object peekFromTail() {
+    public T peekFromTail() {
         return tail != null ? tail.value : null;
     }
 
     //извлечение значения из конца списка с удалением;
-    public Object peekAndRemoveFromTail() {
+    public T peekAndRemoveFromTail() {
         if(tail == null)
             return null;
 
-        Object res = tail.value;
+        T res = tail.value;
 
         if( head != tail ) {
             tail = tail.previous;
@@ -91,7 +104,7 @@ public class DoubleLinkedList {
 
     //определение, содержит ли список заданное значение, или нет
     public boolean contains(Object val) {
-        ListEx it = head;
+        ListEx<T> it = head;
         while (it != null) {
             if(it.keeps(val))
                 return true;
@@ -102,7 +115,7 @@ public class DoubleLinkedList {
     }
 
     //поглощение списка другим списком с добавлением значений второго в начало
-    public boolean absorptionAndAddToHead(DoubleLinkedList list) {
+    public boolean absorptionAndAddToHead(DoubleLinkedList<T> list) {
         if (list.head == null)
             return false;
 
@@ -119,7 +132,7 @@ public class DoubleLinkedList {
     }
 
     //поглощение списка другим списком с добавлением значений второго в конец
-    public boolean absorptionAndAddToTail(DoubleLinkedList list) {
+    public boolean absorptionAndAddToTail(DoubleLinkedList<T> list) {
         if (list.head == null)
             return false;
 
@@ -134,7 +147,7 @@ public class DoubleLinkedList {
             return true;
         }
     }
-    private void releasingList (DoubleLinkedList list) {
+    private void releasingList (DoubleLinkedList<T> list) {
         head = list.head;
         tail = list.tail;
         list.head = list.tail = null;
@@ -142,36 +155,122 @@ public class DoubleLinkedList {
 
     //печать всех значений списка в прямом порядке
     public void printAllWithHead() {
-        ListEx it = head;
-        if ( it == null)
+        if ( head == null)
             System.out.println("null");
-
-        while (it != null) {
-            System.out.println(it.value);
-            it = it.next;
-        }
+        forEach(System.out::println);
         System.out.println();
     }
 
     //печать всех значений списка в обратном порядке
     public void printAllWithTail() {
-        ListEx it = tail;
-        while (it != null) {
-            System.out.println(it.value);
-            it = it.previous;
-        }
+        forEachReversed(System.out::println);
         System.out.println();
     }
 
+    //выполнять заданное действие для каждого значения списка в прямом порядке
+    public void forEach(Consumer<? super T> action) {
+        ListEx<T> it = head;
+        while (it != null) {
+            action.accept(it.value);
+            it = it.next;
+        }
+    }
 
+    //выполнять заданное действие для каждого значения списка в обратном порядке
+    public void forEachReversed(Consumer<? super T> action) {
+        ListEx<T> it = tail;
+        while (it != null) {
+            action.accept(it.value);
+            it = it.previous;
+        }
+    }
+
+    //агрегировать значения в прямом порядке
+    public <A> A aggregateWithHead(A init, BiFunction<? super A,? super T, ? extends A> aggrFunk) {
+        A res = init;
+        ListEx<T> it = head;
+        while (it != null) {
+            res = aggrFunk.apply(res, it.value);
+            it = it.next;
+        }
+        return res;
+    }
+
+    //агрегировать значения в прямом порядке
+    public <A> A aggregateWithTail(A init, BiFunction<? super A,? super T,? extends A> aggrFunk) {
+        A res = init;
+        ListEx<T> it = tail;
+        while (it != null) {
+            res = aggrFunk.apply(res, it.value);
+            it = it.previous;
+        }
+        return res;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new ForwardIterator<>(head);
+    }
+
+    private static class ForwardIterator<V> implements Iterator<V>{
+        ListEx<V> ex;
+
+        ForwardIterator(ListEx<V> ex) {
+            this.ex = ex;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return ex != null ;
+        }
+
+        @Override
+        public V next() {
+            if( ex == null)
+                throw new NoSuchElementException();
+            V res = ex.value;
+            ex = ex.next;
+            return res;
+        }
+    }
+
+    //для итерирования списка в обратном порядке
+    public DoubleLinkedList<T> reverse() {
+        if(head == null)
+            return new DoubleLinkedList<>();
+
+        ListEx<T> newTail = new ListEx<>(head.value),
+                newHead = newTail,
+                it = head;
+        while (it.next != null) {
+            it = it.next;
+            ListEx<T> nh = new ListEx<>(it.value);
+            nh.next = newHead;
+            nh.previous = null;
+            newHead.previous = nh;
+            newHead = nh;
+        }
+        return new DoubleLinkedList<>(newHead, newTail);
+    }
+
+    @Override
+    public DoubleLinkedList<T> clone() throws CloneNotSupportedException {
+        DoubleLinkedList<T> copy = (DoubleLinkedList<T>) super.clone();
+        DoubleLinkedList<T> result = new DoubleLinkedList<>();
+
+        for(T el : copy) {
+            result.addToTail(el);
+        }
+         return result;
+    }
 
     // определение узла цепочки DoubleLinkedList
-    private static class ListEx {
-        Object value;
-        ListEx next;
-        ListEx previous;
+    private static class ListEx<T> implements Cloneable {
+        T value;
+        ListEx<T> next;
+        ListEx<T> previous;
 
-        ListEx(Object value) {
+        ListEx(T value) {
             this.value = value;
         }
 
